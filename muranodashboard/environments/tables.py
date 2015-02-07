@@ -25,8 +25,10 @@ from horizon import tables
 from muranodashboard.environments import api
 from muranodashboard.environments import consts
 
-LOG = logging.getLogger(__name__)
+from muranodashboard import api as api_utils
+from muranodashboard.api import packages as pkg_api
 
+LOG = logging.getLogger(__name__)
 
 def _get_environment_status_and_version(request, table):
     environment_id = table.kwargs.get('environment_id')
@@ -273,10 +275,20 @@ class ServicesTable(tables.DataTable):
     def get_object_id(self, datum):
         return datum['?']['id']
 
+    def get_apps_list(self):
+
+        packages = []
+        with api_utils.handled_exceptions(self.request):
+            packages, self._more = pkg_api.package_list(
+                self.request, filters={'type': 'Application'})
+
+        return packages
+
     class Meta:
         name = 'services'
-        verbose_name = _('Components')
-        template = 'common/_data_table.html'
+        verbose_name = _('Component List')
+        template = 'services/_data_table.html'
+        no_data_message = _('NO COMPONENTS')
         status_columns = ['status']
         row_class = UpdateServiceRow
         table_actions = (AddApplication, DeployThisEnvironment)
