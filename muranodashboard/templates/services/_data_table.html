@@ -1,0 +1,74 @@
+{% extends 'common/_data_table.html' %}
+{% load i18n %}
+{% load custom_filters %}
+{% block title %}{% trans "Components" %}{% endblock %}
+
+{% block table_caption %}
+  <div class="row">
+    <div class="col-xs-4">
+      <h3 class="table_title extra_title">{% trans "Application Components" %}</h3>
+    </div>
+    <div class="col-xs-5">
+      <div class="dropdown" id="envAppsCategory">
+        <h4>App category</h4>
+        <button class="btn btn-default dropdown-toggle" type="button" id="envAppsCategory"
+                data-toggle="dropdown" aria-expanded="true">
+          All
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="envAppsCategory">
+          <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Kubernetes</a></li>
+          <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Some other category</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-xs-3">
+      <div class="has-feedback" id="envAppsFilter">
+        <input class="form-control" value="{{ search }}" type="text" name="search" placeholder="Filter">
+        <span class="fa fa-search form-control-feedback"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+  <div id="apps_carousel" class="carousel">
+    <div class="carousel-inner">
+      {% for chunk in table.get_apps_list|subdivide:6 %}
+        <div class="item {% if forloop.first %}active{% endif %}">
+          <div class="row">
+            {% for app in chunk %}
+              {% with environment_id=table.kwargs.environment_id %}
+                {% include 'services/app_tile_small.html' %}
+              {% endwith %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <a class="left carousel-control" href="#apps_carousel" data-slide="prev">
+      <i class="fa fa-chevron-left"></i>
+    </a>
+    <a class="right carousel-control" href="#apps_carousel" data-slide="next">
+      <i class="fa fa-chevron-right"></i>
+    </a>
+  </div>
+
+  <tr class='table_caption'>
+    <th class='table_header' colspan='{{ columns|length }}'>
+      <h3 class='table_title'>{{ table }}</h3>
+      {{ table.render_table_actions }}
+    </th>
+  </tr>
+{% endblock table_caption %}
+
+{% block table_body %}
+  <tbody>
+  <tr><td colspan="{{ table.get_columns|length }}">
+    <div class="drop_component">
+      <h4 class="centering"><i class="fa fa-bullseye"></i> {% trans 'Drop component here to add it' %}</h4></div>
+  </td></tr>
+  {% for row in rows %}
+    {{ row.render }}
+  {% endfor %}
+  </tbody>
+{% endblock table_body %}

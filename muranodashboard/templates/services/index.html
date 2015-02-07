@@ -18,3 +18,44 @@
   {% include "_stylesheets.html" %}
   <link rel="stylesheet" href="{% static 'muranodashboard/css/catalog.css' %}"/>
 {% endblock %}
+
+{% block js %}
+  {% include 'horizon/_scripts.html' %}
+  <script>
+  $(function() {
+    var $dropArea = $('.drop_component'),
+        draggedAppUrl = null,
+        firstDropTarget = null;
+    $('.draggable_app').each(function() {
+      $(this).on('dragstart', function(ev) {
+        ev.originalEvent.dataTransfer.effectAllowed = 'copy';
+        // we have to use an external variable for this since
+        // storing data in dataTransfer object works only for FF
+        draggedAppUrl = $(this).find('input[type="hidden"]').val();
+        // set it so the DND works in FF
+        ev.originalEvent.dataTransfer.setData('text/uri-list', draggedAppUrl);
+      }).on('dragend', function() {
+        $dropArea.removeClass('over');
+      })
+    });
+    $dropArea.on('dragover', function(ev) {
+      ev.preventDefault();
+      ev.originalEvent.dataTransfer.dropEffect = 'copy';
+      return false;
+    }).on('dragenter', function(ev) {
+      $(this).addClass('over');
+      firstDropTarget = ev.target;
+    }).on('dragleave', function(ev) {
+      if ( firstDropTarget === ev.target ) {
+        $(this).removeClass('over');
+      }
+    }).on('drop', function(ev) {
+      ev.preventDefault();
+      horizon.modals.loadModal(draggedAppUrl);
+      return false;
+    })
+  });
+
+  $('#apps_carousel').carousel({interval: false});
+  </script>
+{% endblock %}
