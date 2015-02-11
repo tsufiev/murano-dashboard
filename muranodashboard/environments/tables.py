@@ -23,6 +23,7 @@ from horizon import exceptions
 from horizon import messages
 from horizon import tables
 
+from muranodashboard.catalog import views as catalog_views
 from muranodashboard.environments import api
 from muranodashboard.environments import consts
 
@@ -282,8 +283,15 @@ class ServicesTable(tables.DataTable):
         with api_utils.handled_exceptions(self.request):
             packages, self._more = pkg_api.package_list(
                 self.request, filters={'type': 'Application'})
-
         return json.dumps([package.to_dict() for package in packages])
+
+    def actions_allowed(self):
+        status, version = _get_environment_status_and_version(
+            self.request, self)
+        return status not in consts.NO_ACTION_ALLOWED_STATUSES
+
+    def get_categories_list(self):
+        return catalog_views.get_categories_list(self.request)
 
     class Meta:
         name = 'services'

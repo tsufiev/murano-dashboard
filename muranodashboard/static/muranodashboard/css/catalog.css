@@ -91,13 +91,13 @@ h3.heading_switcher a.btn {
 }
 
 @media (max-width: 916px) {
-  .draggable_app .well {
+  .draggable_app .well, .no_apps.well {
     min-height: 120px;
   }
 }
 
 @media (min-width: 916px) and (max-width: 1158px) {
-  .draggable_app .well {
+  .draggable_app .well, .no_apps.well {
     min-height: 105px;
   }
 }
@@ -122,6 +122,7 @@ h3.heading_switcher a.btn {
 
 .carousel {
 	padding: 0 40px;
+  margin-bottom: 20px;
 }
 
 .carousel-control {
@@ -169,7 +170,6 @@ h3.heading_switcher a.btn {
 }
 
 #envAppsCategory {
-  float: right;
   margin-top: 8px;
 }
 
