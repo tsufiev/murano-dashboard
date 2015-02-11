@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
+{% load horizon %}
+{% load custom_filters %}
 {% block title %}{% trans "Components" %}{% endblock %}
 
 {% block page_header %}
   {% include "services/_page_header.html" %}
 {% endblock page_header %}
 {% block main %}
+  <input type="hidden" id="environmentId" value="{{ environment_id }}">
 <div class="row">
   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
   {{ tab_group.render }}
@@ -21,6 +24,20 @@
 
 {% block js %}
   {% include 'horizon/_scripts.html' %}
+  <script type="text/template" id="app_tile_small">
+  {% jstemplate %}
+    {% url 'horizon:murano:catalog:images' '[[app_id]]' as image_url %}
+    {% url 'horizon:murano:catalog:add' '[[app_id]]' '[[environment_id]]' 'True' 'True' as add_url %}
+    <div class="col-xs-2 draggable_app">
+      <div class="well well-sm" draggable="true">
+        <img class="centering" src="{{ image_url|unquote }}"
+             height="50" width="50" draggable="false"/>
+        <input type="hidden" value="{{ add_url|unquote }}"/>
+        <div class="centering">[[app_name]]</div>
+      </div>
+    </div>
+  {% endjstemplate %}
+  </script>
   <script>
   $(function() {
     var $dropArea = $('.drop_component'),
@@ -54,6 +71,47 @@
       horizon.modals.loadModal(draggedAppUrl);
       return false;
     })
+  });
+
+  var packages = $.parseJSON($('#apps_carousel_contents').val());
+
+  function subdivide(numOfItems) {
+    var chunks = [],
+        seq = this,
+        head = seq.slice(0, numOfItems),
+        tail = seq.slice(numOfItems);
+    while ( tail.length ) {
+      chunks.push(head);
+      head = tail.slice(0, numOfItems);
+      tail = tail.slice(numOfItems);
+    }
+    chunks.push(head);
+    return chunks;
+  }
+
+  Array.prototype.subdivide = subdivide;
+
+  var $carouselInner = $('.carousel-inner');
+
+  var tileTemplate = Hogan.compile($('#app_tile_small').html()),
+      environmentId = $('#environmentId').val();
+
+  packages.subdivide(6).forEach(function(chunk, index) {
+    var $item = $('<div class="item"></div>'),
+        $row = $('<div class="row"></div>');
+    if ( index == 0 ) {
+      $item.addClass('active');
+    }
+    $item.appendTo($row);
+    chunk.forEach(function(pkg) {
+      var html = tileTemplate.render({
+        app_name: pkg.name,
+        environment_id: environmentId,
+        app_id: pkg.id
+      });
+      $(html).appendTo($item);
+    });
+    $item.appendTo($carouselInner);
   });
 
   $('#apps_carousel').carousel({interval: false});

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import logging
 
 from django.core.urlresolvers import reverse
@@ -29,6 +30,7 @@ from muranodashboard import api as api_utils
 from muranodashboard.api import packages as pkg_api
 
 LOG = logging.getLogger(__name__)
+
 
 def _get_environment_status_and_version(request, table):
     environment_id = table.kwargs.get('environment_id')
@@ -276,13 +278,12 @@ class ServicesTable(tables.DataTable):
         return datum['?']['id']
 
     def get_apps_list(self):
-
         packages = []
         with api_utils.handled_exceptions(self.request):
             packages, self._more = pkg_api.package_list(
                 self.request, filters={'type': 'Application'})
 
-        return packages
+        return json.dumps([package.to_dict() for package in packages])
 
     class Meta:
         name = 'services'

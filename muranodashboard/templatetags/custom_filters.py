@@ -1,5 +1,7 @@
 from django import forms
 from django import template
+from django.template import defaultfilters
+import urllib
 
 register = template.Library()
 
@@ -20,11 +22,8 @@ def last_half(seq):
     half_len = len(seq) / 2
     return seq[half_len:]
 
-@register.filter(name='subdivide')
-def subdivide(seq, num_of_items):
-    chunks = []
-    head, tail = seq[:num_of_items], seq[num_of_items:]
-    while tail:
-        chunks.append(head)
-        head, tail = tail[:num_of_items], tail[num_of_items:]
-    return chunks
+
+@register.filter(name='unquote')
+@defaultfilters.stringfilter
+def unquote_raw(value):
+    return urllib.unquote(value)
