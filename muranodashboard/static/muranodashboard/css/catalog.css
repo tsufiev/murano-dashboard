@@ -266,3 +266,12 @@ h3.link .caret {
 .modal-header img {
   margin-top: -7px;
 }
+
+.selected_field {
+  color: blue;
+  margin-left: -12px;
+}
+
+.selected_field:before {
+  content: '> ';
+}
