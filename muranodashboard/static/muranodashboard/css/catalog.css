@@ -275,3 +275,37 @@ h3.link .caret {
 .selected_field:before {
   content: '> ';
 }
+
+.steps_list_container {
+  margin: 0 -15px;
+  border-top: #d3d3d3 1px solid;
+  border-bottom: #d3d3d3 1px solid;
+}
+
+.steps_list {
+  padding: 10px 20px 0 20px;
+}
+
+.steps_list li {
+  padding-bottom: 7px;
+}
+
+.steps_list li.done {
+  font-style: italic;
+  color: #76c900;
+}
+
+button.wizard_cancel {
+  margin-right: 10px;
+}
+
+h3 .wizard_title {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.steps_list li.active {
+  font-weight: bold;
+  color: blue;
+  border-bottom: blue solid 3px;
+}
