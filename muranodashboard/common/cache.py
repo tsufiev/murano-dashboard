@@ -65,11 +65,12 @@ def _save_to_file(file_name, content):
 def with_cache(*dst_parts):
     def _decorator(func):
         @functools.wraps(func)
-        def __inner(request, app_id):
-            path = os.path.join(_get_entry_path(app_id), *dst_parts)
+        def __inner(request, app_id, *args):
+            parts = tuple([str(part) for part in (dst_parts + args)])
+            path = os.path.join(_get_entry_path(app_id), *parts)
             content = _load_from_file(path)
             if content is None:
-                content = func(request, app_id)
+                content = func(request, app_id, *args)
                 if content:
                     LOG.debug('Caching value at {0}.'.format(path))
                     _save_to_file(path, content)

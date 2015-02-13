@@ -98,6 +98,12 @@ def get_app_logo(request, app_id):
     return api.muranoclient(request).packages.get_logo(app_id)
 
 
+@cache.with_cache('description-images')
+def get_app_desc_image(request, app_id, step_index):
+    return api.muranoclient(request).packages.get_desc_image(
+        app_id, step_index)
+
+
 @cache.with_cache('supplier_logo', 'supplier_logo.png')
 def get_app_supplier_logo(request, app_id):
     return api.muranoclient(request).packages.get_supplier_logo(app_id)

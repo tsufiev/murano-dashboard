@@ -218,6 +218,14 @@ def get_image(request, app_id):
         return http.HttpResponseRedirect(universal_logo)
 
 
+def get_desc_image(request, app_id, step_index):
+    content = pkg_api.get_app_desc_image(request, app_id, step_index)
+    if content:
+        return http.HttpResponse(content=content, content_type='image/png')
+    else:
+        raise http.Http404()
+
+
 def get_supplier_image(request, app_id):
     content = pkg_api.get_app_supplier_logo(request, app_id)
     if content:

@@ -41,6 +41,9 @@ urlpatterns = urls.patterns(
     urls.url(r'^details/(?P<application_id>[^/]+)$',
              views.AppDetailsView.as_view(), name='application_details'),
     urls.url(r'^images/(?P<app_id>[^/]*)', 'get_image', name="images"),
+    urls.url(r'^desc_images/(?P<app_id>[^/]+)/(?P<step_index>[0-9]+)$',
+             'get_desc_image',
+             name="desc_images"),
     urls.url(r'^supplier-images/(?P<app_id>[^/]*)', 'get_supplier_image',
              name="supplier_images")
 )

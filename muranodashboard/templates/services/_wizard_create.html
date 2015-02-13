@@ -46,6 +46,9 @@
 <p>{% blocktrans %} {{ extended_description }} {% endblocktrans %}</p>
 </div>
 <div class="right">
+    <img class="description"
+         src="{% url 'horizon:murano:catalog:desc_images' app_id wizard.steps.index %}"
+         onerror='this.style.display = "none"'/>
     <h3> {% blocktrans %} {{ service_name }} Application{% endblocktrans %} </h3>
     {% for name, title, description in field_descriptions %}
         <p>
