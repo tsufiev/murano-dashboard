@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import base64
+import json
 import logging
 
 from django.core.urlresolvers import reverse
@@ -26,6 +28,7 @@ from horizon import tabs
 from horizon import workflows
 
 from muranoclient.common import exceptions as exc
+from muranodashboard import api as api_utils
 from muranodashboard.environments import api
 from muranodashboard.environments import tables as env_tables
 from muranodashboard.environments import tabs as env_tabs
@@ -76,27 +79,7 @@ class EnvironmentDetails(tabs.TabbedTableView):
         return context
 
 
-class ApplicationActions(generic.View):
-    @staticmethod
-    def get(request, environment_id=None, service_id=None, action_id=None):
-        if api.action_allowed(request, environment_id):
-            api.run_action(request, environment_id, action_id)
-            service = api.service_get(request, environment_id, service_id)
-            action_name = api.extract_actions_list(service).get(action_id, '-')
-            component_name = getattr(service, 'name', '-')
-            msg = _("Action '{0}' was scheduled for component '{1}.").format(
-                action_name, component_name)
-            messages.success(request, msg)
-        else:
-            msg = _("There is some action being run in an environment")
-            messages.error(request, msg)
-        url = reverse('horizon:murano:environments:services',
-                      args=(environment_id,))
-
-        return http.HttpResponseRedirect(url)
-
-
-class DetailServiceView(tabs.TabView):
+class DetailServiceView(tabs.TabbedTableView):
     tab_group_class = env_tabs.ServicesTabs
     template_name = 'services/details.html'
 
@@ -232,3 +215,63 @@ class JSONView(generic.View):
     def get(request, **kwargs):
         data = api.load_environment_data(request, kwargs['environment_id'])
         return http.HttpResponse(data, content_type='application/json')
+
+
+class JSONResponse(http.HttpResponse):
+    def __init__(self, content=None, **kwargs):
+        if content is None:
+            content = {}
+        kwargs.pop('content_type', None)
+        super(JSONResponse, self).__init__(
+            content=json.dumps(content), content_type='application/json',
+            **kwargs)
+
+
+class StartActionView(generic.View):
+    @staticmethod
+    def post(request, environment_id, action_id):
+        if api.action_allowed(request, environment_id):
+            task_id = api.run_action(request, environment_id, action_id)
+            url = reverse('horizon:murano:environments:action_result',
+                          args=(environment_id, task_id))
+            return JSONResponse({'url': url})
+        else:
+            return JSONResponse()
+
+
+class ActionResultView(generic.View):
+    @staticmethod
+    def is_valid_result(result):
+        try:
+            return result['result']['?']['type'] == 'io.murano.File'
+        except (KeyError, ValueError):
+            return False
+
+    def get(self, request, environment_id, task_id, optional):
+        mc = api_utils.muranoclient(request)
+        result = mc.actions.get_result(environment_id, task_id)
+        if result and not self.is_valid_result(result):
+            return http.HttpResponseServerError(
+                'Invalid action result received from engine')
+        elif result and optional == 'poll':
+            # remove file contents from response on first successful poll
+            del result['result']
+            return JSONResponse(result)
+        elif result and result['isException']:
+            # last poll was successful, but when we tried to get file contents,
+            # something wrong happened. Should not reach this point
+            return http.HttpResponseGone()
+        elif result:
+            # processing content that is finally ready
+            result = result['result']
+            filename = result['filename'] or 'file'
+            content_type = result['mimeType'] or 'application/octet-stream'
+            response = http.HttpResponse(content_type=content_type)
+            response['Content-Disposition'] = (
+                'attachment; filename=%s' % filename)
+            response.write(base64.b64decode(result['base64Content']))
+            response['Content-Length'] = str(len(response.content))
+            return response
+        else:
+            # polling haven't returned content yet
+            return JSONResponse()
