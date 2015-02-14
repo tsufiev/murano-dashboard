@@ -134,7 +134,9 @@
       }
     }
 
-    fillCarousel(packages);
+    if ( packages ) {
+      fillCarousel(packages);
+    }
 
     $carousel.carousel({interval: false});
 
@@ -177,6 +179,79 @@
         refillCarousel();
         ev.preventDefault();
       }
+    });
+
+    function hideSpinner() {
+      horizon.modals.spinner.modal('hide');
+    }
+
+    function handleError() {
+      hideSpinner();
+      horizon.alert('error', 'Unable to run action.');
+    }
+
+    $(document).find('.ajax-wait').click(function(event) {
+      var $this = $(this),
+          $form = $this.closest('.table_wrapper > form'),
+          startUrl = $this.attr('href'),
+          resultUrl = null,
+          ERRDATA = 'error',
+          data = null;
+
+      horizon.modals.modal_spinner(gettext("Working"));
+      if ( startUrl ) {
+        console.log(1)
+        $.ajax({
+          method: 'POST',
+          url: startUrl,
+          data: $form.serialize(),
+          async: false,
+          success: function(data) {
+            console.log(3)
+            resultUrl = data && data.url;
+          },
+          error: handleError
+        });
+        if ( resultUrl ) {
+          function doRequest(url) {
+            var _data;
+            $.ajax({
+              method: 'GET',
+              url: url,
+              async: false,
+              error: function() {
+                handleError();
+                _data = ERRDATA;
+              },
+              success: function(newData) {
+                _data = newData;
+              }
+            });
+            return _data;
+          }
+          var intervalId = window.setInterval(function() {
+            // it's better to avoid placing the whole downloadable content
+            // into JS memory in case of downloading very large files
+            console.log(4)
+            data = doRequest(resultUrl + 'poll');
+            if ( !$.isEmptyObject(data) ) {
+              console.log(5)
+              window.clearInterval(intervalId);
+              if ( data !== ERRDATA ) {
+                if ( data.isException ) {
+                  handleError();
+                } else {
+                  hideSpinner();
+                  document.location = resultUrl;
+                }
+              }
+            }
+          }, 500);
+        } else {
+          handleError();
+        }
+      }
+      event.preventDefault();
     });
   });
   </script>
