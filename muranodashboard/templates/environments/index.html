@@ -62,6 +62,7 @@
           var $emptyRow = $tbody.find('tr.empty');
           $emptyRow.hide();
           $newEnvTr.prependTo($tbody);
+          $name.find('input').focus();
           $('button#cancel_create_env').on('click', function(ev) {
             $newEnvTr.remove();
             $emptyRow.show();
