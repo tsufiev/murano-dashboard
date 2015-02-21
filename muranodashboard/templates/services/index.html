@@ -194,65 +194,73 @@
         horizon.alert('error', 'Unable to run action.');
       }
 
-      $tab.find('.ajax-wait').click(function(event) {
-        var $this = $(this),
-            $form = $this.closest('.table_wrapper > form'),
-            startUrl = $this.attr('href'),
-            resultUrl = null,
-            ERRDATA = 'error',
-            data = null;
+      bindActionHandlers($tab);
+      var $table = $('table.datatable');
+      $table.on('update', function() {
+        bindActionHandlers($table);
+      });
 
-        horizon.modals.modal_spinner(gettext("Working"));
-        if ( startUrl ) {
-          $.ajax({
-            method: 'POST',
-            url: startUrl,
-            data: $form.serialize(),
-            async: false,
-            success: function(data) {
-              resultUrl = data && data.url;
-            },
-            error: handleError
-          });
-          if ( resultUrl ) {
-            function doRequest(url) {
-              var _data;
-              $.ajax({
-                method: 'GET',
-                url: url,
-                async: false,
-                error: function() {
-                  handleError();
-                  _data = ERRDATA;
-                },
-                success: function(newData) {
-                  _data = newData;
-                }
-              });
-              return _data;
-            }
-            var intervalId = window.setInterval(function() {
-              // it's better to avoid placing the whole downloadable content
-              // into JS memory in case of downloading very large files
-              data = doRequest(resultUrl + 'poll');
-              if ( !$.isEmptyObject(data) ) {
-                window.clearInterval(intervalId);
-                if ( data !== ERRDATA ) {
-                  if ( data.isException ) {
+      function bindActionHandlers($parent) {
+        $parent.find('.ajax-wait').click(function(event) {
+          var $this = $(this),
+              $form = $this.closest('.table_wrapper > form'),
+              startUrl = $this.attr('href'),
+              resultUrl = null,
+              ERRDATA = 'error',
+              data = null;
+
+          horizon.modals.modal_spinner(gettext("Working"));
+          if ( startUrl ) {
+            $.ajax({
+              method: 'POST',
+              url: startUrl,
+              data: $form.serialize(),
+              async: false,
+              success: function(data) {
+                resultUrl = data && data.url;
+              },
+              error: handleError
+            });
+            if ( resultUrl ) {
+              function doRequest(url) {
+                var _data;
+                $.ajax({
+                  method: 'GET',
+                  url: url,
+                  async: false,
+                  error: function() {
                     handleError();
-                  } else {
-                    hideSpinner();
-                    document.location = resultUrl;
+                    _data = ERRDATA;
+                  },
+                  success: function(newData) {
+                    _data = newData;
+                  }
+                });
+                return _data;
+              }
+              var intervalId = window.setInterval(function() {
+                // it's better to avoid placing the whole downloadable content
+                // into JS memory in case of downloading very large files
+                data = doRequest(resultUrl + 'poll');
+                if ( !$.isEmptyObject(data) ) {
+                  window.clearInterval(intervalId);
+                  if ( data !== ERRDATA ) {
+                    if ( data.isException ) {
+                      handleError();
+                    } else {
+                      hideSpinner();
+                      document.location = resultUrl;
+                    }
                   }
                 }
-              }
-            }, 500);
-          } else {
-            handleError();
+              }, 500);
+            } else {
+              handleError();
+            }
           }
-        }
-        event.preventDefault();
-      });
+          event.preventDefault();
+        });
+      }
     }
 
   });
