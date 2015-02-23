@@ -259,6 +259,8 @@
               }, 500);
             } else if ( isSync ) {
               handleError();
+            } else if ( !isSync ) {
+              document.location = $form.attr('action');
             }
           }
           event.preventDefault();
