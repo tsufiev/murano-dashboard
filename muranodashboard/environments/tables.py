@@ -297,12 +297,17 @@ class ServicesTable(tables.DataTable):
         actions = super(ServicesTable, self).get_row_actions(datum)
         environment_id = self.kwargs['environment_id']
         for action_datum in api.extract_actions_list(datum):
+            if action_datum['sync']:
+                _classes = ('murano_action', 'sync')
+            else:
+                _classes = ('murano_action',)
+
             class CustomAction(tables.LinkAction):
                 name = action_datum['name']
                 verbose_name = action_datum['name']
                 url = reverse('horizon:murano:environments:start_action',
                               args=(environment_id, action_datum['id']))
-                classes = ('ajax-wait',)
+                classes = _classes
                 table = self
 
                 def allowed(self, request, datum):

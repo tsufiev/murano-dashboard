@@ -201,15 +201,18 @@
       });
 
       function bindActionHandlers($parent) {
-        $parent.find('.ajax-wait').click(function(event) {
+        $parent.find('.murano_action').off('click').on('click', function(event) {
           var $this = $(this),
+              isSync = $this.hasClass('sync'),
               $form = $this.closest('.table_wrapper > form'),
               startUrl = $this.attr('href'),
               resultUrl = null,
               ERRDATA = 'error',
               data = null;
 
-          horizon.modals.modal_spinner(gettext("Working"));
+          if ( isSync ) {
+            horizon.modals.modal_spinner(gettext("Working"));
+          }
           if ( startUrl ) {
             $.ajax({
               method: 'POST',
@@ -221,7 +224,7 @@
               },
               error: handleError
             });
-            if ( resultUrl ) {
+            if ( isSync && resultUrl ) {
               function doRequest(url) {
                 var _data;
                 $.ajax({
@@ -254,7 +257,7 @@
                   }
                 }
               }, 500);
-            } else {
+            } else if ( isSync ) {
               handleError();
             }
           }

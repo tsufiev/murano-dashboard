@@ -283,7 +283,9 @@ def extract_actions_list(service):
     actions_data = service['?'].get('_actions', {})
 
     def make_action_datum(action_id, _action):
-        return dict(_action.items() + [('id', action_id)])
+        datum = dict(_action.items() + [('id', action_id)])
+        datum['sync'] = datum['name'] == 'exportConfig'
+        return datum
 
     return [make_action_datum(_id, action) for (_id, action) in
             actions_data.iteritems() if action.get('enabled')]
